@@ -5,7 +5,7 @@ use ndarray::Array2;
 use num_enum::{IntoPrimitive, TryFromPrimitive};
 use serde::{Deserialize, Serialize};
 
-use crate::{common_matrices, linalg::Tensor, C64};
+use crate::{c64, common_matrices, linalg::Tensor};
 
 /// An element of the single-qubit Pauli group.
 #[derive(Debug, Copy, Clone, Serialize, Deserialize, IntoPrimitive, TryFromPrimitive)]
@@ -24,11 +24,11 @@ pub enum Pauli {
 /// Types that can be converted to unitary matrices.
 pub trait AsUnitary {
     /// Returns a representation as a unitary matrix.
-    fn as_unitary(&self) -> Array2<C64>;
+    fn as_unitary(&self) -> Array2<c64>;
 }
 
 impl AsUnitary for Pauli {
-    fn as_unitary(&self) -> Array2<C64> {
+    fn as_unitary(&self) -> Array2<c64> {
         match self {
             Pauli::I => common_matrices::nq_eye(1),
             Pauli::X => common_matrices::x(),
@@ -39,7 +39,7 @@ impl AsUnitary for Pauli {
 }
 
 impl AsUnitary for Vec<Pauli> {
-    fn as_unitary(&self) -> Array2<C64> {
+    fn as_unitary(&self) -> Array2<c64> {
         let sq_unitaries = self.iter().map(|p| p.as_unitary());
         let result = sq_unitaries.reduce(|p, q| p.tensor(&q));
         result.unwrap()

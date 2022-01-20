@@ -1,3 +1,4 @@
+use crate::c64;
 use crate::chp_decompositions::ChpOperation;
 use crate::common_matrices;
 use crate::instrument::Instrument;
@@ -11,7 +12,6 @@ use crate::states::State;
 use crate::states::StateData::Mixed;
 use crate::StateData;
 use crate::Tableau;
-use crate::C64;
 use num_traits::{One, Zero};
 
 use serde::{Deserialize, Serialize};
@@ -113,15 +113,15 @@ impl NoiseModel {
             Process {
                 n_qubits: 1,
                 data: KrausDecomposition(array![[
-                    [C64::one(), C64::zero()],
-                    [C64::zero(), C64::zero()]
+                    [c64::one(), c64::zero()],
+                    [c64::zero(), c64::zero()]
                 ]]),
             },
             Process {
                 n_qubits: 1,
                 data: KrausDecomposition(array![[
-                    [C64::zero(), C64::zero()],
-                    [C64::zero(), C64::one()]
+                    [c64::zero(), c64::zero()],
+                    [c64::zero(), c64::one()]
                 ]]),
             },
         ]);

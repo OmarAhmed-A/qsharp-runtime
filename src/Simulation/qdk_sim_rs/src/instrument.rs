@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+use crate::{c64, Process, ProcessData};
 use crate::{states::StateData::Mixed, StateData};
-use crate::{Process, ProcessData, C64};
 use num_traits::{One, Zero};
 use rand::Rng;
 use std::iter::Iterator;
@@ -55,15 +55,15 @@ impl Instrument {
                             Process {
                                 n_qubits: 1,
                                 data: ProcessData::KrausDecomposition(array![[
-                                    [C64::one(), C64::zero()],
-                                    [C64::zero(), C64::zero()]
+                                    [c64::one(), c64::zero()],
+                                    [c64::zero(), c64::zero()]
                                 ]]),
                             },
                             Process {
                                 n_qubits: 1,
                                 data: ProcessData::KrausDecomposition(array![[
-                                    [C64::zero(), C64::zero()],
-                                    [C64::zero(), C64::one()]
+                                    [c64::zero(), c64::zero()],
+                                    [c64::zero(), c64::one()]
                                 ]]),
                             },
                         ]);

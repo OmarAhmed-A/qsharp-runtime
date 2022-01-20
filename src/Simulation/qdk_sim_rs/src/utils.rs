@@ -3,22 +3,19 @@
 
 use ndarray::{s, Array1, Array2, ArrayView1};
 use num_complex::Complex;
-
-/// A complex number with two 64-bit floating point fields.
-/// That is, the analogy of [`f64`] to complex values.
-pub type C64 = Complex<f64>;
+pub use num_complex::Complex64 as c64;
 
 /// The real unit 1, represented as a complex number with two 64-bit floating
 /// point fields.
-pub const ONE_C: C64 = Complex::new(1f64, 0f64);
+pub const ONE_C: c64 = Complex::new(1f64, 0f64);
 
 /// The number zero, represented as a complex number with two 64-bit floating
 /// point fields.
-pub const ZERO_C: C64 = Complex::new(0f64, 0f64);
+pub const ZERO_C: c64 = Complex::new(0f64, 0f64);
 
 /// The imaginary unit $i$, represented as a complex number with two 64-bit
 /// floating point fields.
-pub const I_C: C64 = Complex::new(0f64, 1f64);
+pub const I_C: c64 = Complex::new(0f64, 1f64);
 
 #[cfg(feature = "web-sys-log")]
 fn log_message(msg: &str) {

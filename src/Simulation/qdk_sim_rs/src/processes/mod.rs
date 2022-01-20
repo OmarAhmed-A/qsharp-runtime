@@ -3,12 +3,12 @@
 
 mod apply;
 
+use crate::c64;
 use crate::chp_decompositions::ChpOperation;
 use crate::linalg::{extend_one_to_n, extend_two_to_n, zeros_like};
 use crate::processes::ProcessData::{KrausDecomposition, MixedPauli, Unitary};
 use crate::NoiseModel;
 use crate::QubitSized;
-use crate::C64;
 use crate::{AsUnitary, Pauli};
 use itertools::Itertools;
 use ndarray::{Array, Array2, Array3, Axis, NewAxis};
@@ -34,14 +34,14 @@ pub enum ProcessData {
     MixedPauli(Vec<(f64, Vec<Pauli>)>),
 
     /// Representation of the process by an arbitrary unitary matrix.
-    Unitary(Array2<C64>),
+    Unitary(Array2<c64>),
 
     /// Representation of the process by the singular vectors of its Choi
     /// representation (colloquially, the Kraus decomposition).
     ///
     /// The first index denotes each Kraus operator, with the second and third
     /// indices representing the indices of each operator.
-    KrausDecomposition(Array3<C64>), // TODO: Superoperator and Choi reps.
+    KrausDecomposition(Array3<c64>), // TODO: Superoperator and Choi reps.
 
     /// Representation of a process as a sequence of other processes.
     Sequence(Vec<Process>),
@@ -86,7 +86,7 @@ impl Process {
                 KrausDecomposition(ks) => {
                     let new_dim = 2usize.pow(n_qubits.try_into().unwrap());
                     let n_kraus = ks.shape()[0];
-                    let mut extended: Array3<C64> = Array::zeros((n_kraus, new_dim, new_dim));
+                    let mut extended: Array3<c64> = Array::zeros((n_kraus, new_dim, new_dim));
                     for (idx_kraus, kraus) in ks.axis_iter(Axis(0)).enumerate() {
                         let mut target = extended.index_axis_mut(Axis(0), idx_kraus);
                         let big_kraus = extend_one_to_n(kraus.view(), idx_qubit, n_qubits);
@@ -133,7 +133,7 @@ impl Process {
                     // TODO: consolidate with extend_one_to_n, above.
                     let new_dim = 2usize.pow(n_qubits.try_into().unwrap());
                     let n_kraus = ks.shape()[0];
-                    let mut extended: Array3<C64> = Array::zeros((n_kraus, new_dim, new_dim));
+                    let mut extended: Array3<c64> = Array::zeros((n_kraus, new_dim, new_dim));
                     for (idx_kraus, kraus) in ks.axis_iter(Axis(0)).enumerate() {
                         let mut target = extended.index_axis_mut(Axis(0), idx_kraus);
                         let big_kraus = extend_two_to_n(kraus, idx_qubit1, idx_qubit2, n_qubits);
@@ -165,7 +165,7 @@ impl Process {
     }
 }
 
-impl Mul<&Process> for C64 {
+impl Mul<&Process> for c64 {
     type Output = Process;
 
     fn mul(self, channel: &Process) -> Self::Output {
@@ -177,7 +177,7 @@ impl Mul<&Process> for C64 {
                 // of linear operators, but the multiplication is on
                 // superoperators (two copies of the original vectorspace).
                 Unitary(u) => KrausDecomposition({
-                    let mut ks = Array3::<C64>::zeros((1, u.shape()[0], u.shape()[1]));
+                    let mut ks = Array3::<c64>::zeros((1, u.shape()[0], u.shape()[1]));
                     ks.index_axis_mut(Axis(0), 0).assign(&(self.sqrt() * u));
                     ks
                 }),
@@ -193,7 +193,7 @@ impl Mul<&Process> for C64 {
     }
 }
 
-impl Mul<Process> for C64 {
+impl Mul<Process> for c64 {
     type Output = Process;
     fn mul(self, channel: Process) -> Self::Output {
         self * (&channel)
@@ -203,7 +203,7 @@ impl Mul<Process> for C64 {
 impl Mul<&Process> for f64 {
     type Output = Process;
     fn mul(self, chanel: &Process) -> Self::Output {
-        C64::new(self, 0f64) * chanel
+        c64::new(self, 0f64) * chanel
     }
 }
 
@@ -333,12 +333,12 @@ pub fn amplitude_damping_channel(gamma: f64) -> Process {
         n_qubits: 1,
         data: KrausDecomposition(array![
             [
-                [C64::one(), C64::zero()],
-                [C64::zero(), C64::one() * (1.0 - gamma).sqrt()]
+                [c64::one(), c64::zero()],
+                [c64::zero(), c64::one() * (1.0 - gamma).sqrt()]
             ],
             [
-                [C64::zero(), C64::one() * gamma.sqrt()],
-                [C64::zero(), C64::zero()]
+                [c64::zero(), c64::one() * gamma.sqrt()],
+                [c64::zero(), c64::zero()]
             ]
         ]),
     }

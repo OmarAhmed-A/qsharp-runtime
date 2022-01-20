@@ -7,7 +7,7 @@ use ndarray::{Array, Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::Zero;
 use std::{convert::TryInto, ops::Mul};
 
-use crate::{common_matrices::nq_eye, C64};
+use crate::{c64, common_matrices::nq_eye};
 
 /// Represents types that have hermitian conjugates (e.g.: $A^\dagger$ for
 /// a matrix $A$ is defined as the complex conjugate transpose of $A$,
@@ -24,7 +24,7 @@ pub trait HasDagger {
     fn dag(&self) -> Self::Output;
 }
 
-impl HasDagger for Array2<C64> {
+impl HasDagger for Array2<c64> {
     type Output = Self;
 
     fn dag(&self) -> Self {
@@ -32,8 +32,8 @@ impl HasDagger for Array2<C64> {
     }
 }
 
-impl HasDagger for ArrayView2<'_, C64> {
-    type Output = Array2<C64>;
+impl HasDagger for ArrayView2<'_, c64> {
+    type Output = Array2<c64>;
 
     fn dag(&self) -> Self::Output {
         self.t().map(|element| element.conj())
@@ -44,11 +44,11 @@ impl HasDagger for ArrayView2<'_, C64> {
 /// as $UXU^{\dagger}$.
 pub trait ConjBy {
     /// Conjugates this value by a given matrix, returning a copy.
-    fn conjugate_by(&self, op: &ArrayView2<C64>) -> Self;
+    fn conjugate_by(&self, op: &ArrayView2<c64>) -> Self;
 }
 
-impl ConjBy for Array2<C64> {
-    fn conjugate_by(&self, op: &ArrayView2<C64>) -> Self {
+impl ConjBy for Array2<c64> {
+    fn conjugate_by(&self, op: &ArrayView2<c64>) -> Self {
         op.dot(self).dot(&op.dag())
     }
 }
@@ -156,7 +156,7 @@ impl<T: Clone + Zero> Trace for &Array2<T> {
 //              from microbenchmarks on tensor and nq_eye directly.
 /// Given an array representing an operator acting on single-qubit states,
 /// returns a new operator that acts on $n$-qubit states.
-pub fn extend_one_to_n(data: ArrayView2<C64>, idx_qubit: usize, n_qubits: usize) -> Array2<C64> {
+pub fn extend_one_to_n(data: ArrayView2<c64>, idx_qubit: usize, n_qubits: usize) -> Array2<c64> {
     let n_left = idx_qubit;
     let n_right = n_qubits - idx_qubit - 1;
     match (n_left, n_right) {
@@ -179,11 +179,11 @@ pub fn extend_one_to_n(data: ArrayView2<C64>, idx_qubit: usize, n_qubits: usize)
 /// Given a view of an array representing a matrix acting on two-qubit states,
 /// extends that array to act on $n$ qubits.
 pub fn extend_two_to_n(
-    data: ArrayView2<C64>,
+    data: ArrayView2<c64>,
     idx_qubit1: usize,
     idx_qubit2: usize,
     n_qubits: usize,
-) -> Array2<C64> {
+) -> Array2<c64> {
     // TODO: double check that data is 4x4.
     let mut permutation = Array::from((0..n_qubits).collect::<Vec<usize>>());
     match (idx_qubit1, idx_qubit2) {
@@ -213,7 +213,7 @@ pub fn extend_two_to_n(
 /// Given a two-index array (i.e.: a matrix) of dimensions 2^n × 2^n for some
 /// n, permutes the left and right indices of the matrix.
 /// Used to represent, for example, swapping qubits in a register.
-pub fn permute_mtx(data: &Array2<C64>, new_order: &[usize]) -> Array2<C64> {
+pub fn permute_mtx(data: &Array2<c64>, new_order: &[usize]) -> Array2<c64> {
     // Check that data is square.
     let (n_rows, n_cols) = (data.shape()[0], data.shape()[1]);
     assert_eq!(n_rows, n_cols);

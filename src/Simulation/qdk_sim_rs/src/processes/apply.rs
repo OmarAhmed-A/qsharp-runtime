@@ -9,8 +9,8 @@ use ndarray::{Array, Array2, Array3, ArrayView2, Axis};
 use rand::{distributions::WeightedIndex, prelude::Distribution, thread_rng};
 
 use crate::{
-    chp_decompositions::ChpOperation, linalg::ConjBy, log, log_as_err, Pauli, Process,
-    ProcessData::*, State, StateData::*, Tableau, C64,
+    c64, chp_decompositions::ChpOperation, linalg::ConjBy, log, log_as_err, Pauli, Process,
+    ProcessData::*, State, StateData::*, Tableau,
 };
 
 use super::promote_pauli_channel;
@@ -155,7 +155,7 @@ fn apply_chp_decomposition_to(
     })
 }
 
-pub(crate) fn apply_unitary(u: &Array2<C64>, state: &State) -> Result<State, String> {
+pub(crate) fn apply_unitary(u: &Array2<c64>, state: &State) -> Result<State, String> {
     Ok(State {
         n_qubits: state.n_qubits,
         data: match &state.data {
@@ -170,7 +170,7 @@ pub(crate) fn apply_unitary(u: &Array2<C64>, state: &State) -> Result<State, Str
     })
 }
 
-pub(crate) fn apply_kraus_decomposition(ks: &Array3<C64>, state: &State) -> Result<State, String> {
+pub(crate) fn apply_kraus_decomposition(ks: &Array3<c64>, state: &State) -> Result<State, String> {
     Ok(State {
         n_qubits: state.n_qubits,
         data: match &state.data {
@@ -180,7 +180,7 @@ pub(crate) fn apply_kraus_decomposition(ks: &Array3<C64>, state: &State) -> Resu
                 // Mixed and recurse.
                 if ks.shape()[0] == 1 {
                     Pure({
-                        let k: ArrayView2<C64> = ks.slice(s![0, .., ..]);
+                        let k: ArrayView2<c64> = ks.slice(s![0, .., ..]);
                         k.dot(psi)
                     })
                 } else {
@@ -188,7 +188,7 @@ pub(crate) fn apply_kraus_decomposition(ks: &Array3<C64>, state: &State) -> Resu
                 }
             }
             Mixed(rho) => Mixed({
-                let mut sum: Array2<C64> = Array::zeros((rho.shape()[0], rho.shape()[1]));
+                let mut sum: Array2<c64> = Array::zeros((rho.shape()[0], rho.shape()[1]));
                 for k in ks.axis_iter(Axis(0)) {
                     sum = sum + rho.conjugate_by(&k);
                 }

@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+use crate::c64;
 use crate::common_matrices;
 use crate::linalg::Tensor;
 use crate::linalg::Trace;
 use crate::states::StateData::{Mixed, Pure, Stabilizer};
 use crate::tableau::Tableau;
 use crate::QubitSized;
-use crate::C64;
 use core::fmt::Display;
 use ndarray::{Array1, Array2, Axis};
 use num_traits::One;
@@ -21,10 +21,10 @@ use pyo3::prelude::*;
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum StateData {
     /// A pure state, represented as a vector of complex numbers.
-    Pure(Array1<C64>),
+    Pure(Array1<c64>),
 
     /// A mixed state, represented as a density operator.
-    Mixed(Array2<C64>),
+    Mixed(Array2<c64>),
 
     /// A stabilizer state, represented as a tableau.
     Stabilizer(Tableau),
@@ -157,11 +157,11 @@ impl State {
 }
 
 impl Trace for &State {
-    type Output = C64;
+    type Output = c64;
 
     fn trace(self) -> Self::Output {
         match &self.data {
-            Pure(_) | StateData::Stabilizer(_) => C64::one(),
+            Pure(_) | StateData::Stabilizer(_) => c64::one(),
             Mixed(ref rho) => rho.trace(),
         }
     }
@@ -177,6 +177,6 @@ mod tests {
             n_qubits: 1usize,
             data: Pure(common_matrices::elementary_vec(0, 2)),
         };
-        assert_eq!(pure.trace(), C64::one());
+        assert_eq!(pure.trace(), c64::one());
     }
 }

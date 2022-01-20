@@ -13,45 +13,45 @@ use num_traits::{One, Zero};
 use crate::utils::*;
 
 /// Returns a copy of the single-qubit identity matrix.
-pub fn i() -> Array2<C64> {
+pub fn i() -> Array2<c64> {
     array![[ONE_C, ZERO_C], [ZERO_C, ONE_C]]
 }
 
 /// Returns a unitary matrix representing the `X` operation.
-pub fn x() -> Array2<C64> {
+pub fn x() -> Array2<c64> {
     array![[ZERO_C, ONE_C], [ONE_C, ZERO_C]]
 }
 
 /// Returns a unitary matrix representing the `Y` operation.
-pub fn y() -> Array2<C64> {
+pub fn y() -> Array2<c64> {
     array![[ZERO_C, -I_C], [I_C, ZERO_C]]
 }
 
 /// Returns a unitary matrix representing the `Z` operation.
-pub fn z() -> Array2<C64> {
+pub fn z() -> Array2<c64> {
     array![[ONE_C, ZERO_C], [ZERO_C, -ONE_C]]
 }
 
 /// Returns a unitary matrix representing the single-qubit Hadamard transformation.
-pub fn h() -> Array2<C64> {
+pub fn h() -> Array2<c64> {
     array![[ONE_C, ONE_C], [ONE_C, -ONE_C]] * FRAC_1_SQRT_2
 }
 
 /// Returns a unitary matrix representing the `T` operation.
-pub fn t() -> Array2<C64> {
+pub fn t() -> Array2<c64> {
     array![
         [ONE_C, ZERO_C],
-        [ZERO_C, C64::new(FRAC_1_SQRT_2, FRAC_1_SQRT_2)]
+        [ZERO_C, c64::new(FRAC_1_SQRT_2, FRAC_1_SQRT_2)]
     ]
 }
 
 /// Returns a unitary matrix representing the `S` operation.
-pub fn s() -> Array2<C64> {
-    array![[ONE_C, ZERO_C], [ZERO_C, C64::new(0.0_f64, 1.0_f64)]]
+pub fn s() -> Array2<c64> {
+    array![[ONE_C, ZERO_C], [ZERO_C, c64::new(0.0_f64, 1.0_f64)]]
 }
 
 /// Returns a unitary matrix representing the `CNOT` operation.
-pub fn cnot() -> Array2<C64> {
+pub fn cnot() -> Array2<c64> {
     array![
         [ONE_C, ZERO_C, ZERO_C, ZERO_C],
         [ZERO_C, ONE_C, ZERO_C, ZERO_C],
@@ -111,7 +111,7 @@ pub fn elementary_matrix<T: Zero + One>(
 ///     [Complex::new(0f64, 0f64), Complex::new(0f64, 0f64), Complex::new(0f64, 0f64), Complex::new(1f64, 0f64)],
 /// ]);
 /// ```
-pub fn nq_eye(nq: usize) -> Array2<C64> {
+pub fn nq_eye(nq: usize) -> Array2<c64> {
     Array2::eye(2usize.pow(nq.try_into().unwrap()))
 }
 
@@ -120,11 +120,11 @@ mod tests {
     use super::*;
     use crate::linalg::HasDagger;
 
-    fn is_self_adjoint(arr: Array2<C64>) -> bool {
+    fn is_self_adjoint(arr: Array2<c64>) -> bool {
         arr == arr.dag()
     }
 
-    fn are_equal_to_precision(actual: Array2<C64>, expected: Array2<C64>) -> bool {
+    fn are_equal_to_precision(actual: Array2<c64>, expected: Array2<c64>) -> bool {
         // If we use assert_eq here, we'll get bitten by finite precision.
         // We also can't use LAPACK, since that greatly complicates bindings,
         // so we do an ad hoc implementation here.
