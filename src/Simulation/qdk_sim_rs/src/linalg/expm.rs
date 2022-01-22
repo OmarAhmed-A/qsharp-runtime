@@ -55,3 +55,28 @@ impl Expm for Array2<c64> {
         Ok(left.dag().dot(&right))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use num_traits::Zero;
+
+    #[test]
+    fn test_expm_works_for_small_diagonal_matrices() -> Result<(), ExpmError> {
+        let argument = c64::new(0.0, -1.0)
+            * (array![
+                [c64::new(-3.0, 0.0), c64::zero()],
+                [c64::zero(), c64::new(5.0, 0.0)]
+            ]);
+        let u = argument.expm()?;
+        assert_close_l2!(
+            &u,
+            &array![
+                [c64::new(-0.9899925, 0.14112001), c64::zero()],
+                [c64::zero(), c64::new(0.28366219, 0.95892427)]
+            ],
+            1e-6
+        );
+        Ok(())
+    }
+}

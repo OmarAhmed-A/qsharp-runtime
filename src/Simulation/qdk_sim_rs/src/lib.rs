@@ -17,7 +17,7 @@
 // that are missing an `# Example` section. Currently, that raises a lot of
 // warnings when building docs, but ideally we should make sure to address
 // warnings going forward by adding relevant examples.
-#![cfg_attr(doc, warn(missing_doc_code_examples))]
+#![cfg_attr(doc, warn(rustdoc::missing_doc_code_examples))]
 
 #[macro_use(array, s)]
 extern crate ndarray;
