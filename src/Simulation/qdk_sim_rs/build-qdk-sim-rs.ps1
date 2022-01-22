@@ -1,7 +1,17 @@
 & (Join-Path $PSScriptRoot ".." ".." ".." "build" "set-env.ps1");
 $IsCI = "$Env:TF_BUILD" -ne "" -or "$Env:CI" -eq "true";
 
-Push-Location $PSScriptRoot    
+# Import ConvertFrom-Toml and ConvertTo-Toml, used for setting versions and
+# crate types.
+. (Join-Path $PSScriptRoot ".." ".." ".." "build" "t2j" "t2j.ps1");
+
+
+Push-Location $PSScriptRoot
+    # Set the crate version first and foremost.
+    $cargoManifest = ConvertFrom-Toml -Path "./Cargo.toml.template";
+    $cargoManifest.package.version = $Env:NUGET_VERSION;
+    ConvertTo-Toml -InputObject $cargoManifest -Path "./Cargo.toml";
+
     # Start with the quick check first and make sure that Rust sources
     # meet formatting and style guide rules.
     cargo fmt -- --check
@@ -25,8 +35,13 @@ Push-Location $PSScriptRoot
     #     all platforms; it's ignored on platforms without CFG functionality.
     $Env:RUSTFLAGS = "-C control-flow-guard";
 
-    # Actually run the build.
-    cargo +nightly build -Z unstable-options @releaseFlag --out-dir "drop";
+    # Actually run the build, repeating once for each crate type to workaround
+    # https://github.com/rust-ndarray/ndarray-linalg/issues/310.
+    foreach ($crateType in @("rlib", "staticlib", "cdylib")) {
+        $cargoManifest.lib."crate-type" = @($crateType);
+        ConvertTo-Toml -InputObject $cargoManifest -Path "./Cargo.toml";
+        cargo +nightly build -Z unstable-options @releaseFlag --out-dir "drop";
+    }
 
     # Make sure docs are complete.
     $Env:RUSTDOCFLAGS = "--html-in-header $(Resolve-Path docs-includes/header.html) " + `

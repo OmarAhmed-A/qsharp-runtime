@@ -1,15 +1,17 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-use core::num;
 use std::{
     fs,
-    io::{self, BufRead, Read, Write},
-    path::{Path, PathBuf},
+    io::{self, Read, Write},
+    path::PathBuf,
 };
 
+use clap::{Parser, Subcommand};
+use thiserror::Error;
+
 #[derive(Error, Debug)]
-pub enum T2QError {
+pub enum T2JError {
     #[error("I/O error")]
     IO(#[from] io::Error),
 
@@ -21,11 +23,10 @@ pub enum T2QError {
 
     #[error("JSON error")]
     JsonError(#[from] serde_json::Error),
-}
 
-use clap::{Parser, Subcommand};
-use serde::Serialize;
-use thiserror::Error;
+    #[error("Number `{value}` is not a u64, i64, or f64 value, and cannot be serialized to TOML.")]
+    UnexpectedNumber { value: serde_json::Number },
+}
 
 struct TryFromWrapper<'a>(&'a serde_json::Value);
 impl<'a> Into<TryFromWrapper<'a>> for &'a serde_json::Value {
@@ -34,7 +35,7 @@ impl<'a> Into<TryFromWrapper<'a>> for &'a serde_json::Value {
     }
 }
 impl<'a> TryFrom<TryFromWrapper<'a>> for toml::Value {
-    type Error = T2QError; // FIXME: Refine
+    type Error = T2JError; // FIXME: Refine
 
     fn try_from(value: TryFromWrapper) -> Result<Self, Self::Error> {
         let TryFromWrapper(value) = value;
@@ -44,7 +45,19 @@ impl<'a> TryFrom<TryFromWrapper<'a>> for toml::Value {
             serde_json::Value::Bool(bool) => toml::Value::Boolean(*bool),
             // FIXME: Break down JSON numbers into either float or int.
             // FIXME: Make unwrap an Error instead.
-            serde_json::Value::Number(number) => toml::Value::Float(number.as_f64().unwrap()),
+            serde_json::Value::Number(number) => {
+                if number.is_i64() {
+                    toml::Value::Integer(number.as_i64().unwrap())
+                } else if number.is_i64() {
+                    toml::Value::Integer(number.as_i64().unwrap())
+                } else if number.is_f64() {
+                    toml::Value::Float(number.as_f64().unwrap())
+                } else {
+                    return Err(T2JError::UnexpectedNumber {
+                        value: number.to_owned(),
+                    });
+                }
+            }
             serde_json::Value::String(str) => toml::Value::String(str.to_string()),
             serde_json::Value::Array(array) => toml::Value::Array(
                 array
@@ -106,7 +119,7 @@ fn write<T: AsRef<[u8]>>(to: PathBuf, data: T) -> Result<(), io::Error> {
     }
 }
 
-fn toml_to_json(from: PathBuf, to: PathBuf) -> Result<(), T2QError> {
+fn toml_to_json(from: PathBuf, to: PathBuf) -> Result<(), T2JError> {
     let source = read(from)?;
     let value = source.parse::<toml::Value>()?;
     let output = serde_json::to_string(&value)?;
@@ -114,7 +127,7 @@ fn toml_to_json(from: PathBuf, to: PathBuf) -> Result<(), T2QError> {
     Ok(())
 }
 
-fn json_to_toml(from: PathBuf, to: PathBuf) -> Result<(), T2QError> {
+fn json_to_toml(from: PathBuf, to: PathBuf) -> Result<(), T2JError> {
     let source = read(from)?;
     let value = source.parse::<serde_json::Value>()?;
     let value: toml::Value = TryFrom::try_from(TryFromWrapper(&value))?;
@@ -123,7 +136,7 @@ fn json_to_toml(from: PathBuf, to: PathBuf) -> Result<(), T2QError> {
     Ok(())
 }
 
-fn main() -> Result<(), T2QError> {
+fn main() -> Result<(), T2JError> {
     let args = Args::parse();
     match args.action {
         Action::Toml2Json { from, to } => toml_to_json(from, to),
