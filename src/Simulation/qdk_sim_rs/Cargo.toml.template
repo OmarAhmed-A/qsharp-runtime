@@ -26,9 +26,10 @@ name = "qdk_sim"
 path = "src/lib.rs"
 crate-type = ["rlib", "staticlib", "cdylib"]
 
-# Optional build-time features: we use this to create Python and WASM bindings.
 [features]
-default = []
+default = ["expm"]
+expm = ["ndarray-linalg", "anyhow"]
+# Optional build-time features: we use this to create Python and WASM bindings.
 wasm = ["web-sys"]
 # When Python bindings are enabled, we also need the pyo3 dependency.
 python = ["pyo3", "numpy"]
@@ -39,14 +40,13 @@ python = ["pyo3", "numpy"]
 [package.metadata.docs.rs]
 rustdoc-args = [ "--html-in-header", "docs-includes/header.html", "--html-after-content", "docs-includes/after.html" ]
 
-
 [profile.release]
 opt-level = 3
 codegen-units = 1   # Reduce number of codegen units to increase optimizations.
 panic = 'unwind'
 
 [dependencies]
-ndarray = { version = "0.15.2", features = ["serde"] }
+ndarray = { version = "0.15.4", features = ["serde"] }
 num-complex = { version = "0.4", features = ["serde"] }
 num-traits = "0.2"
 derive_more = "0.99.10"
@@ -57,6 +57,7 @@ serde_json = "1.0"
 lazy_static = "1.4.0"
 cfg-if = "1.0.0"
 num_enum = "0.5.1"
+
 # See https://github.com/rust-random/rand/issues/990
 # and https://docs.rs/getrandom/0.1.15/getrandom/index.html#support-for-webassembly-and-asmjs
 # for why this is needed.
@@ -69,15 +70,23 @@ web-sys = { version = "0.3.4",  features = ['console'], optional = true }
 
 # We only need PyO3 when generating Python bindings. 
 pyo3 = { version = "0.13.2", features = ["extension-module"], optional = true }
-numpy = {version = "0.13.1", optional = true}
+numpy = { version = "0.13.1", optional = true }
 
 # We use built to expose compile-time metadata about how this crate
 # was built to C and Rust callers.
 built = "0.5.0"
 
+# When expm support is enabled, we need linalg to provide eigenvalue
+# decompositions. That in turn relies on having a BLAS implementation
+# available. Currently, only Intel MKL is supported by ndarray-linalg for xplat
+# static linking, so we choose that option here.
+ndarray-linalg = { version = "0.14.1", features = ["intel-mkl-static"], optional = true }
+# The intel-mkl-src crate is incompatible with versions of anyhow more recent
+# than 1.0.49, so we constrain that here.
+anyhow = { version = "<1.0.49", optional = true }
+
 [build-dependencies]
 built = "0.5.0"
-
 
 [dev-dependencies]
 assert-json-diff = "2.0.1"
