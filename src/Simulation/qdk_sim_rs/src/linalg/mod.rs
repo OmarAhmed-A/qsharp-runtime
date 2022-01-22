@@ -12,6 +12,13 @@ pub use tensor::*;
 mod trace;
 pub use trace::*;
 
+cfg_if::cfg_if! {
+    if #[cfg(feature = "expm")] {
+        mod expm;
+        pub use expm::*;
+    }
+}
+
 use ndarray::{Array, Array2, ArrayView2};
 use num_traits::Zero;
 use std::convert::TryInto;
