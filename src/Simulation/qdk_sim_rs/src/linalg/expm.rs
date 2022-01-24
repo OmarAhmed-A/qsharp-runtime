@@ -27,7 +27,8 @@ where
     fn expm(&self) -> Result<Self, Self::Error>;
 }
 
-// FIXME: Generalize to avoid having to redefine for f64, c64.
+// TODO: Generalize to avoid having to redefine for f64, c64.
+// Previous attempt at constraints:
 // impl<A, S> Expm for ArrayBase<S, Ix2>
 // where
 //     A: Scalar + Lapack,
@@ -44,15 +45,17 @@ impl Expm for Array2<c64> {
         let (eigvals, eigvecs) = self.eig()?;
         let eigvals = eigvals.map(|e| e.exp());
 
+        let eigvecs = eigvecs.t();
+
         // Rescale right vectors by eigvals.
-        let left = eigvecs.to_owned();
-        let right = eigvals
+        let left = eigvals
             .broadcast(eigvecs.dim())
             .map_or(Err(ExpmError::Broadcast), Result::Ok)?
             .to_owned()
             * eigvecs;
+        let right = eigvecs.dag();
 
-        Ok(left.dag().dot(&right))
+        Ok(left.dot(&right))
     }
 }
 
@@ -74,6 +77,24 @@ mod tests {
             &array![
                 [c64::new(-0.9899925, 0.14112001), c64::zero()],
                 [c64::zero(), c64::new(0.28366219, 0.95892427)]
+            ],
+            1e-6
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_expm_works_for_small_off_diagonal_matrices() -> Result<(), ExpmError> {
+        let argument = array![
+            [c64::zero(), c64::new(0.0, 1.234)],
+            [c64::new(0.0, 1.234), c64::zero()]
+        ];
+        let u = argument.expm()?;
+        assert_close_l2!(
+            &u,
+            &array![
+                [c64::new(0.33046511, 0.0), c64::new(0.0, 0.94381821)],
+                [c64::new(0.0, 0.94381821), c64::new(0.33046511, 0.0)]
             ],
             1e-6
         );
