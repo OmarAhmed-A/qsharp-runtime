@@ -7,5 +7,5 @@ members = [
 exclude = [
     # Build support tooling should not be considered part of the same workspace
     # as artifacts build from the repo itself.
-    "build/*"
+    "build/t2j"
 ]
