@@ -1,14 +1,24 @@
 & (Join-Path $PSScriptRoot ".." ".." ".." "build" "set-env.ps1");
 $IsCI = "$Env:TF_BUILD" -ne "" -or "$Env:CI" -eq "true";
 
+Write-Host -ForegroundColor Blue "##[info]Rust toolchain versions:"
+@{
+    "cargo" = (cargo --version);
+    "rustc" = (rustc --version);
+    "cargo fmt" = (cargo fmt --version);
+    "cargo clippy" = (cargo clippy --version);
+} | Format-Table | Out-String | Write-Host;
+
 # Import ConvertFrom-Toml and ConvertTo-Toml, used for setting versions and
 # crate types.
 . (Join-Path $PSScriptRoot ".." ".." ".." "build" "t2j" "t2j.ps1");
+Write-Host -ForegroundColor Blue "##[info]Successfully loaded t2j: $(Invoke-T2J --version)"
 
 
 Push-Location $PSScriptRoot
     # Set the crate version first and foremost.
     $cargoManifest = ConvertFrom-Toml -Path "./Cargo.toml.template";
+    $cargoManifest | Format-List | Out-String | Write-Host;
     $cargoManifest.package.version = $Env:NUGET_VERSION;
     ConvertTo-Toml -InputObject $cargoManifest -Path "./Cargo.toml";
 
