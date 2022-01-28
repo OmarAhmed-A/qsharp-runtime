@@ -9,14 +9,21 @@ Write-Host -ForegroundColor Blue "##[info]Rust toolchain versions:"
     "cargo clippy" = (cargo clippy --version);
 } | Format-Table | Out-String | Write-Host;
 
-# Import ConvertFrom-Toml and ConvertTo-Toml, used for setting versions and
-# crate types.
-. (Join-Path $PSScriptRoot ".." ".." ".." "build" "t2j" "t2j.ps1");
-Write-Host -ForegroundColor Blue "##[info]Successfully loaded t2j: $(Invoke-T2J --version)"
-
 
 Push-Location $PSScriptRoot
-    # Set the crate version first and foremost.
+    # Import ConvertFrom-Toml and ConvertTo-Toml, used for setting versions and
+    # crate types. Note that because a workspace file is used, Cargo.toml must
+    # exist in this directory before any call to cargo run. We copy over the
+    # template unmodified to handle that limitation.
+    Copy-Item Cargo.toml.template Cargo.toml
+
+    # We can now import TOML handling implemented in the t2j crate.
+    # TODO @cgranade: Consider moving to use objconv instead to decouple
+    #                 dependencies here.
+    . (Join-Path $PSScriptRoot ".." ".." ".." "build" "t2j" "t2j.ps1");
+    Write-Host -ForegroundColor Blue "##[info]Successfully loaded t2j: $(Invoke-T2J --version)"
+
+    # Now that we have prereqs, set the crate version first and foremost.
     $cargoManifest = ConvertFrom-Toml -Path "./Cargo.toml.template";
     $cargoManifest | Format-List | Out-String | Write-Host;
     $cargoManifest.package.version = $Env:NUGET_VERSION;
