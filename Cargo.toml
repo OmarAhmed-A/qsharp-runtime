@@ -4,3 +4,8 @@ members = [
     "src/Simulation/qdk_sim_rs",
     "src/Qir/microsoft-quantum-qir-runtime-sys",
 ]
+exclude = [
+    # Build support tooling should not be considered part of the same workspace
+    # as artifacts build from the repo itself.
+    "build/*"
+]
