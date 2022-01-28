@@ -3,9 +3,8 @@
 
 use crate::c64;
 
-use ndarray::linalg::Dot;
-use ndarray::{Array2, ArrayBase, Axis, Data, Ix2, NewAxis, Zip};
-use ndarray_linalg::{assert_close_l2, Eig, EigVals, Eigh, Lapack, Scalar};
+use ndarray::Array2;
+use ndarray_linalg::Eig;
 use thiserror::Error;
 
 use super::HasDagger;
@@ -19,11 +18,16 @@ pub enum ExpmError {
 }
 
 /// Trait marking types that support the matrix exponential operation.
+///
+/// Note that this trait requires the `expm` crate feature to be enabled.
 pub trait Expm
 where
     Self: Sized,
 {
+    /// The type of errors that can result from matrix exponential operations.
     type Error: std::error::Error;
+
+    /// Returns the exponential of a given matrix.
     fn expm(&self) -> Result<Self, Self::Error>;
 }
 
@@ -42,6 +46,14 @@ impl Expm for Array2<c64> {
     type Error = ExpmError;
 
     fn expm(&self) -> Result<Self, Self::Error> {
+        // Our strategy is to use the eigenvalue decomposition of our
+        // input to compute the matrix exponential. This is not the most
+        // numerically stable strategy in general, but works well for small
+        // matrices.
+        //
+        // In the future, we may want to consider using a more stable strategy
+        // such as the Padé approximant approach when inputs are large.
+
         let (eigvals, eigvecs) = self.eig()?;
         let eigvals = eigvals.map(|e| e.exp());
 
@@ -62,6 +74,7 @@ impl Expm for Array2<c64> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use ndarray_linalg::assert_close_l2;
     use num_traits::Zero;
 
     #[test]
